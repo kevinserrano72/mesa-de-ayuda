@@ -1,0 +1,21 @@
+{
+  "name": "mesa-de-ayuda",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de solicitudes de soporte técnic",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kevinserrano72/mesa-de-ayuda.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/kevinserrano72/mesa-de-ayuda/issues"
+  },
+  "homepage": "https://github.com/kevinserrano72/mesa-de-ayuda#readme"
+}
