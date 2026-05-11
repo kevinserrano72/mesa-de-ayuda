@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solicitudes - Mesa de Ayuda Lite</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>
+          <span><i class="fas fa-headset"></i></span>
+          Mesa de Ayuda
+        </h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">
+          <i class="fas fa-chart-pie"></i>
+          Dashboard
+        </a>
+        <a href="solicitudes.html" class="nav-item active">
+          <i class="fas fa-ticket-alt"></i>
+          Solicitudes
+        </a>
+        <a href="nueva-solicitud.html" class="nav-item">
+          <i class="fas fa-plus-circle"></i>
+          Nueva Solicitud
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div class="user-details">
+            <div class="user-name" id="userName">Administrador</div>
+            <div class="user-role" id="userRole">Admin</div>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="Auth.logout()">
+          <i class="fas fa-sign-out-alt"></i>
+          Cerrar Sesion
+        </button>
+      </div>
+    </aside>
+
+    <!-- ============================================
+         MAIN CONTENT - RF03 Listado de Solicitudes
+         ============================================ -->
+    <main class="main-content">
+      <div class="page-header">
+        <h2>Gestion de Solicitudes</h2>
+        <p>Listado completo de solicitudes de soporte</p>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Filtros -->
+      <div class="filters-bar">
+        <div class="filter-group search-input">
+          <i class="fas fa-search" style="color: var(--text-secondary)"></i>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Buscar por titulo, codigo o solicitante..."
+            style="flex:1"
+          >
+        </div>
+        
+        <div class="filter-group">
+          <label for="filterEstado">Estado:</label>
+          <select id="filterEstado">
+            <option value="Todos">Todos</option>
+            <option value="Registrada">Registrada</option>
+            <option value="En Proceso">En Proceso</option>
+            <option value="Resuelta">Resuelta</option>
+            <option value="Cerrada">Cerrada</option>
+            <option value="Anulada">Anulada</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="filterPrioridad">Prioridad:</label>
+          <select id="filterPrioridad">
+            <option value="Todas">Todas</option>
+            <option value="Critica">Critica</option>
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label for="filterTipo">Tipo:</label>
+          <select id="filterTipo">
+            <option value="Todos">Todos</option>
+            <option value="Soporte Tecnico">Soporte Tecnico</option>
+            <option value="Falla de Sistema">Falla de Sistema</option>
+            <option value="Solicitud de Acceso">Solicitud de Acceso</option>
+            <option value="Mantenimiento">Mantenimiento</option>
+            <option value="Consulta General">Consulta General</option>
+          </select>
+        </div>
+        
+        <a href="nueva-solicitud.html" class="btn btn-primary">
+          <i class="fas fa-plus"></i>
+          Nueva
+        </a>
+      </div>
+
+      <!-- Tabla de Solicitudes -->
+      <div class="card">
+        <div class="card-body" style="padding: 0">
+          <div class="table-container">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Codigo</th>
+                  <th>Titulo</th>
+                  <th>Tipo</th>
+                  <th>Solicitante</th>
+                  <th>Prioridad</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="solicitudesTableBody">
+                <tr>
+                  <td colspan="8">
+                    <div class="loading">
+                      <div class="spinner"></div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer">
+          <span id="totalCount">0 solicitudes encontradas</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal de Confirmacion -->
+  <div class="modal-overlay hidden" id="deleteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-exclamation-triangle" style="color: var(--danger)"></i> Confirmar Eliminacion</h3>
+        <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Esta seguro que desea eliminar la solicitud <strong id="deleteCode"></strong>?</p>
+        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.5rem">
+          Esta accion no se puede deshacer.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeDeleteModal()">Cancelar</button>
+        <button class="btn btn-danger" id="btnConfirmDelete">
+          <i class="fas fa-trash"></i> Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Verificar autenticacion
+    Auth.requireAuth();
+
+    // Cargar datos del usuario
+    const user = Auth.getUser();
+    if (user) {
+      document.getElementById('userName').textContent = user.nombre;
+      document.getElementById('userRole').textContent = user.rol;
+      document.getElementById('userAvatar').textContent = user.nombre.charAt(0).toUpperCase();
+    }
+
+    let solicitudesData = [];
+    let deleteId = null;
+
+    // Cargar solicitudes
+    async function loadSolicitudes() {
+      try {
+        const estado = document.getElementById('filterEstado').value;
+        const prioridad = document.getElementById('filterPrioridad').value;
+        const tipo = document.getElementById('filterTipo').value;
+        const busqueda = document.getElementById('searchInput').value;
+        
+        const params = new URLSearchParams();
+        if (estado !== 'Todos') params.append('estado', estado);
+        if (prioridad !== 'Todas') params.append('prioridad', prioridad);
+        if (tipo !== 'Todos') params.append('tipo', tipo);
+        if (busqueda) params.append('busqueda', busqueda);
+        
+        const response = await API.get(`/api/solicitudes?${params.toString()}`);
+        
+        if (response.success) {
+          solicitudesData = response.data;
+          renderTable(solicitudesData);
+          document.getElementById('totalCount').textContent = 
+            `${response.total} solicitud${response.total !== 1 ? 'es' : ''} encontrada${response.total !== 1 ? 's' : ''}`;
+        }
+      } catch (error) {
+        console.error('Error cargando solicitudes:', error);
+        showAlert('alertContainer', 'Error al cargar las solicitudes.', 'danger');
+      }
+    }
+
+    function renderTable(solicitudes) {
+      const tbody = document.getElementById('solicitudesTableBody');
+      
+      if (!solicitudes || solicitudes.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h4>No hay solicitudes</h4>
+                <p>No se encontraron solicitudes con los filtros aplicados.</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = solicitudes.map(sol => `
+        <tr>
+          <td><strong>${sol.codigo}</strong></td>
+          <td>
+            <a href="detalle-solicitud.html?id=${sol._id}" style="color: var(--primary); text-decoration: none">
+              ${sol.titulo}
+            </a>
+          </td>
+          <td>${sol.tipo}</td>
+          <td>${sol.solicitante.nombre}</td>
+          <td><span class="badge badge-${sol.prioridad.toLowerCase()}">${sol.prioridad}</span></td>
+          <td><span class="badge badge-${sol.estado.toLowerCase().replace(' ', '-')}">${sol.estado}</span></td>
+          <td>${formatDate(sol.fechaCreacion)}</td>
+          <td>
+            <div class="btn-group">
+              <a href="detalle-solicitud.html?id=${sol._id}" class="btn btn-sm btn-outline" title="Ver detalle">
+                <i class="fas fa-eye"></i>
+              </a>
+              <a href="editar-solicitud.html?id=${sol._id}" class="btn btn-sm btn-outline" title="Editar">
+                <i class="fas fa-edit"></i>
+              </a>
+              <button class="btn btn-sm btn-danger" onclick="openDeleteModal('${sol._id}', '${sol.codigo}')" title="Eliminar">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Modal de eliminacion
+    function openDeleteModal(id, codigo) {
+      deleteId = id;
+      document.getElementById('deleteCode').textContent = codigo;
+      document.getElementById('deleteModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+      deleteId = null;
+      document.getElementById('deleteModal').classList.add('hidden');
+    }
+
+    document.getElementById('btnConfirmDelete').addEventListener('click', async () => {
+      if (!deleteId) return;
+      
+      try {
+        const response = await API.delete(`/api/solicitudes/${deleteId}`);
+        
+        if (response.success) {
+          showAlert('alertContainer', response.message, 'success');
+          closeDeleteModal();
+          loadSolicitudes();
+        }
+      } catch (error) {
+        showAlert('alertContainer', error.message || 'Error al eliminar.', 'danger');
+      }
+    });
+
+    // Event listeners para filtros
+    document.getElementById('filterEstado').addEventListener('change', loadSolicitudes);
+    document.getElementById('filterPrioridad').addEventListener('change', loadSolicitudes);
+    document.getElementById('filterTipo').addEventListener('change', loadSolicitudes);
+    document.getElementById('searchInput').addEventListener('input', debounce(loadSolicitudes, 300));
+
+    // Funcion debounce
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    // Inicializar
+    loadSolicitudes();
+  </script>
+</body>
+</html>
