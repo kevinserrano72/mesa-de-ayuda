@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Solicitud - Mesa de Ayuda Lite</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>
+          <span><i class="fas fa-headset"></i></span>
+          Mesa de Ayuda
+        </h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item">
+          <i class="fas fa-chart-pie"></i>
+          Dashboard
+        </a>
+        <a href="solicitudes.html" class="nav-item active">
+          <i class="fas fa-ticket-alt"></i>
+          Solicitudes
+        </a>
+        <a href="nueva-solicitud.html" class="nav-item">
+          <i class="fas fa-plus-circle"></i>
+          Nueva Solicitud
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div class="user-details">
+            <div class="user-name" id="userName">Administrador</div>
+            <div class="user-role" id="userRole">Admin</div>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="Auth.logout()">
+          <i class="fas fa-sign-out-alt"></i>
+          Cerrar Sesion
+        </button>
+      </div>
+    </aside>
+
+    <!-- ============================================
+         MAIN CONTENT - RF04 Actualizar Solicitud
+         ============================================ -->
+    <main class="main-content">
+      <div class="page-header">
+        <h2 id="pageTitle">Editar Solicitud</h2>
+        <p id="pageSubtitle">Modificar datos de la solicitud</p>
+      </div>
+
+      <div id="alertContainer"></div>
+
+      <!-- Loading -->
+      <div id="loadingContainer">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div id="contentContainer" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fas fa-edit"></i> Editar Solicitud <span id="codigoHeader"></span></h3>
+          </div>
+          <div class="card-body">
+            <form id="editForm">
+              <!-- Codigo y Estado (solo lectura) -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Codigo</label>
+                  <input type="text" id="codigo" class="form-control" readonly disabled>
+                </div>
+                <div class="form-group">
+                  <label>Estado Actual</label>
+                  <input type="text" id="estadoActual" class="form-control" readonly disabled>
+                </div>
+              </div>
+
+              <!-- Titulo -->
+              <div class="form-group">
+                <label for="titulo">Titulo de la Solicitud <span class="required">*</span></label>
+                <input 
+                  type="text" 
+                  id="titulo" 
+                  class="form-control" 
+                  maxlength="200"
+                  required
+                >
+                <div class="form-error" id="tituloError"></div>
+              </div>
+
+              <!-- Descripcion -->
+              <div class="form-group">
+                <label for="descripcion">Descripcion Detallada <span class="required">*</span></label>
+                <textarea 
+                  id="descripcion" 
+                  class="form-control" 
+                  rows="4"
+                  maxlength="2000"
+                  required
+                ></textarea>
+                <div class="form-error" id="descripcionError"></div>
+              </div>
+
+              <!-- Tipo y Prioridad -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="tipo">Tipo de Solicitud <span class="required">*</span></label>
+                  <select id="tipo" class="form-control" required>
+                    <option value="Soporte Tecnico">Soporte Tecnico</option>
+                    <option value="Falla de Sistema">Falla de Sistema</option>
+                    <option value="Solicitud de Acceso">Solicitud de Acceso</option>
+                    <option value="Mantenimiento">Mantenimiento</option>
+                    <option value="Consulta General">Consulta General</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="prioridad">Prioridad <span class="required">*</span></label>
+                  <select id="prioridad" class="form-control" required>
+                    <option value="Baja">Baja</option>
+                    <option value="Media">Media</option>
+                    <option value="Alta">Alta</option>
+                    <option value="Critica">Critica</option>
+                  </select>
+                </div>
+              </div>
+
+              <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border)">
+
+              <h4 style="margin-bottom: 1rem; color: var(--text-primary)">
+                <i class="fas fa-user"></i> Datos del Solicitante
+              </h4>
+
+              <!-- Datos del Solicitante -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="solicitanteNombre">Nombre Completo <span class="required">*</span></label>
+                  <input 
+                    type="text" 
+                    id="solicitanteNombre" 
+                    class="form-control" 
+                    required
+                  >
+                  <div class="form-error" id="solicitanteNombreError"></div>
+                </div>
+
+                <div class="form-group">
+                  <label for="solicitanteEmail">Correo Electronico <span class="required">*</span></label>
+                  <input 
+                    type="email" 
+                    id="solicitanteEmail" 
+                    class="form-control" 
+                    required
+                  >
+                  <div class="form-error" id="solicitanteEmailError"></div>
+                </div>
+              </div>
+
+              <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border)">
+
+              <!-- Observaciones -->
+              <div class="form-group">
+                <label for="observaciones">Observaciones</label>
+                <textarea 
+                  id="observaciones" 
+                  class="form-control" 
+                  rows="3"
+                  maxlength="1000"
+                  placeholder="Agregar observaciones adicionales..."
+                ></textarea>
+              </div>
+
+              <!-- Botones -->
+              <div class="btn-group" style="margin-top: 1.5rem">
+                <button type="submit" class="btn btn-primary" id="btnGuardar">
+                  <i class="fas fa-save"></i>
+                  Guardar Cambios
+                </button>
+                <a href="#" id="btnCancelar" class="btn btn-secondary">
+                  <i class="fas fa-times"></i>
+                  Cancelar
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Verificar autenticacion
+    Auth.requireAuth();
+
+    // Cargar datos del usuario
+    const user = Auth.getUser();
+    if (user) {
+      document.getElementById('userName').textContent = user.nombre;
+      document.getElementById('userRole').textContent = user.rol;
+      document.getElementById('userAvatar').textContent = user.nombre.charAt(0).toUpperCase();
+    }
+
+    // Obtener ID de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const solicitudId = urlParams.get('id');
+
+    if (!solicitudId) {
+      window.location.href = 'solicitudes.html';
+    }
+
+    // Cargar solicitud
+    async function loadSolicitud() {
+      try {
+        const response = await API.get(`/api/solicitudes/${solicitudId}`);
+        
+        if (response.success) {
+          const sol = response.data;
+          
+          // Actualizar titulo
+          document.getElementById('pageTitle').textContent = `Editar ${sol.codigo}`;
+          document.getElementById('codigoHeader').textContent = sol.codigo;
+          document.getElementById('btnCancelar').href = `detalle-solicitud.html?id=${sol._id}`;
+          
+          // Llenar formulario
+          document.getElementById('codigo').value = sol.codigo;
+          document.getElementById('estadoActual').value = sol.estado;
+          document.getElementById('titulo').value = sol.titulo;
+          document.getElementById('descripcion').value = sol.descripcion;
+          document.getElementById('tipo').value = sol.tipo;
+          document.getElementById('prioridad').value = sol.prioridad;
+          document.getElementById('solicitanteNombre').value = sol.solicitante.nombre;
+          document.getElementById('solicitanteEmail').value = sol.solicitante.email;
+          document.getElementById('observaciones').value = sol.observaciones || '';
+          
+          document.getElementById('loadingContainer').classList.add('hidden');
+          document.getElementById('contentContainer').classList.remove('hidden');
+        }
+      } catch (error) {
+        showAlert('alertContainer', 'Error al cargar la solicitud.', 'danger');
+      }
+    }
+
+    // Manejar envio del formulario
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Obtener valores
+      const titulo = document.getElementById('titulo').value.trim();
+      const descripcion = document.getElementById('descripcion').value.trim();
+      const tipo = document.getElementById('tipo').value;
+      const prioridad = document.getElementById('prioridad').value;
+      const solicitanteNombre = document.getElementById('solicitanteNombre').value.trim();
+      const solicitanteEmail = document.getElementById('solicitanteEmail').value.trim();
+      const observaciones = document.getElementById('observaciones').value.trim();
+      
+      // Limpiar errores
+      document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
+      document.querySelectorAll('.form-control').forEach(el => el.classList.remove('error'));
+      
+      // Validaciones
+      let hasError = false;
+      
+      if (!titulo || titulo.length < 5) {
+        document.getElementById('tituloError').textContent = 'El titulo debe tener al menos 5 caracteres.';
+        document.getElementById('titulo').classList.add('error');
+        hasError = true;
+      }
+      
+      if (!descripcion || descripcion.length < 10) {
+        document.getElementById('descripcionError').textContent = 'La descripcion debe tener al menos 10 caracteres.';
+        document.getElementById('descripcion').classList.add('error');
+        hasError = true;
+      }
+      
+      if (!solicitanteNombre) {
+        document.getElementById('solicitanteNombreError').textContent = 'El nombre del solicitante es obligatorio.';
+        document.getElementById('solicitanteNombre').classList.add('error');
+        hasError = true;
+      }
+      
+      const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
+      if (!solicitanteEmail || !emailRegex.test(solicitanteEmail)) {
+        document.getElementById('solicitanteEmailError').textContent = 'Email invalido.';
+        document.getElementById('solicitanteEmail').classList.add('error');
+        hasError = true;
+      }
+      
+      if (hasError) return;
+      
+      // Deshabilitar boton
+      const btnGuardar = document.getElementById('btnGuardar');
+      btnGuardar.disabled = true;
+      btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+      
+      try {
+        const response = await API.put(`/api/solicitudes/${solicitudId}`, {
+          titulo,
+          descripcion,
+          tipo,
+          prioridad,
+          solicitanteNombre,
+          solicitanteEmail,
+          observaciones
+        });
+        
+        if (response.success) {
+          showAlert('alertContainer', 'Solicitud actualizada correctamente.', 'success');
+          setTimeout(() => {
+            window.location.href = `detalle-solicitud.html?id=${solicitudId}`;
+          }, 1500);
+        }
+      } catch (error) {
+        showAlert('alertContainer', error.message || 'Error al actualizar.', 'danger');
+        btnGuardar.disabled = false;
+        btnGuardar.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+      }
+    });
+
+    // Inicializar
+    loadSolicitud();
+  </script>
+</body>
+</html>
