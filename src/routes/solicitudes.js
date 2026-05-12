@@ -14,15 +14,7 @@ const FLUJO_ESTADOS = {
 };
 
 function toCliente(doc) {
-  const o = doc.toObject ? doc.toObject() : { ...doc };
-  return {
-    ...o,
-    historial: (o.historialEstados || []).map((h) => ({
-      fecha: h.fecha,
-      estado: h.estadoNuevo,
-      observacion: h.observaciones || "",
-    })),
-  };
+  return doc.toObject ? doc.toObject() : { ...doc };
 }
 
 function permitidoTransicion(actual, siguiente) {
@@ -112,15 +104,6 @@ router.post("/", async (req, res) => {
         telefono: solicitanteTelefono ? String(solicitanteTelefono).trim() : "",
       },
       creadoPor: usuarioId,
-      historialEstados: [
-        {
-          estadoAnterior: null,
-          estadoNuevo: "Registrada",
-          usuarioId,
-          observaciones: "Solicitud creada",
-          fecha: new Date(),
-        },
-      ],
     });
 
     return res.status(201).json({
@@ -154,7 +137,6 @@ router.put("/:id", async (req, res) => {
     }
 
     const body = req.body || {};
-    const usuarioId = req.userId;
     const isFullEdit = body.titulo !== undefined;
 
     const estadoSolicitado =
@@ -191,20 +173,6 @@ router.put("/:id", async (req, res) => {
         });
       }
 
-      const obsHistorial =
-        body.observacionEstado != null && String(body.observacionEstado).trim() !== ""
-          ? String(body.observacionEstado).trim()
-          : isFullEdit
-            ? "Actualización desde pantalla de edición"
-            : String(body.observaciones ?? "").trim();
-
-      solicitud.historialEstados.push({
-        estadoAnterior: actual,
-        estadoNuevo: estadoSolicitado,
-        usuarioId,
-        observaciones: obsHistorial,
-        fecha: new Date(),
-      });
       solicitud.estado = estadoSolicitado;
 
       if (estadoSolicitado === "Resuelta" || estadoSolicitado === "Cerrada") {

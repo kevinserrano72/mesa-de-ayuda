@@ -136,7 +136,7 @@
         <!-- Cambiar Estado -->
         <div class="card mb-2" id="cambiarEstadoCard">
           <div class="card-header">
-            <h3><i class="fas fa-exchange-alt"></i> Cambiar Estado (RF06)</h3>
+            <h3><i class="fas fa-exchange-alt"></i> Cambiar Estado</h3>
           </div>
           <div class="card-body">
             <div class="form-row">
@@ -146,27 +146,11 @@
                   <option value="">Seleccione un estado</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label for="observacionEstado">Observacion (opcional)</label>
-                <input type="text" id="observacionEstado" class="form-control" placeholder="Agregar una observacion...">
-              </div>
             </div>
             <button class="btn btn-success" id="btnCambiarEstado">
               <i class="fas fa-check"></i>
               Actualizar Estado
             </button>
-          </div>
-        </div>
-
-        <!-- Historial -->
-        <div class="card">
-          <div class="card-header">
-            <h3><i class="fas fa-history"></i> Historial de Cambios</h3>
-          </div>
-          <div class="card-body">
-            <div class="timeline" id="historialTimeline">
-              <!-- Se llena con JS -->
-            </div>
           </div>
         </div>
       </div>
@@ -261,37 +245,11 @@
         selectEstado.innerHTML = '<option value="">Seleccione un estado</option>' +
           estadosPermitidos.map(e => `<option value="${e}">${e}</option>`).join('');
       }
-      
-      // Historial
-      renderHistorial(sol.historial || []);
-    }
-
-    function renderHistorial(historial) {
-      const container = document.getElementById('historialTimeline');
-      
-      if (!historial || historial.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-secondary)">Sin historial disponible.</p>';
-        return;
-      }
-      
-      // Ordenar de mas reciente a mas antiguo
-      const sorted = [...historial].reverse();
-      
-      container.innerHTML = sorted.map(item => `
-        <div class="timeline-item">
-          <div class="timeline-date">${formatDate(item.fecha)}</div>
-          <div class="timeline-content">
-            <span class="timeline-estado badge badge-${item.estado.toLowerCase().replace(' ', '-')}">${item.estado}</span>
-            ${item.observacion ? `<p class="timeline-observacion">${item.observacion}</p>` : ''}
-          </div>
-        </div>
-      `).join('');
     }
 
     // Cambiar estado
     document.getElementById('btnCambiarEstado').addEventListener('click', async () => {
       const nuevoEstado = document.getElementById('nuevoEstado').value;
-      const observacion = document.getElementById('observacionEstado').value.trim();
       
       if (!nuevoEstado) {
         showAlert('alertContainer', 'Seleccione un nuevo estado.', 'warning');
@@ -300,14 +258,12 @@
       
       try {
         const response = await API.put(`/api/solicitudes/${solicitudId}`, {
-          estado: nuevoEstado,
-          observaciones: observacion
+          estado: nuevoEstado
         });
         
         if (response.success) {
           showAlert('alertContainer', 'Estado actualizado correctamente.', 'success');
           loadSolicitud();
-          document.getElementById('observacionEstado').value = '';
         }
       } catch (error) {
         showAlert('alertContainer', error.message || 'Error al actualizar el estado.', 'danger');

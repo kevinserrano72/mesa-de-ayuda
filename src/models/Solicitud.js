@@ -9,17 +9,6 @@ const solicitanteSchema = new mongoose.Schema(
   { _id: false }
 );
 
-const historialEstadoSchema = new mongoose.Schema(
-  {
-    estadoAnterior: { type: String, default: null },
-    estadoNuevo: { type: String, required: true },
-    usuarioId: { type: mongoose.Schema.Types.ObjectId, ref: "Usuario", required: true },
-    observaciones: { type: String, default: "" },
-    fecha: { type: Date, default: Date.now },
-  },
-  { _id: false }
-);
-
 const solicitudSchema = new mongoose.Schema(
   {
     codigo: { type: String, required: true, unique: true, trim: true },
@@ -43,7 +32,6 @@ const solicitudSchema = new mongoose.Schema(
     observaciones: { type: String, default: "", maxlength: 1000 },
     fechaCreacion: { type: Date, default: Date.now },
     fechaCierre: { type: Date, default: null },
-    historialEstados: { type: [historialEstadoSchema], default: [] },
   },
   { timestamps: true }
 );

@@ -98,30 +98,7 @@ const seed = async () => {
       },
     ];
 
-    // Agregar historial de estados a cada solicitud
-    const solicitudesConHistorial = solicitudesData.map((s) => ({
-      ...s,
-      historialEstados: [
-        {
-          estadoAnterior: null,
-          estadoNuevo: "Registrada",
-          usuarioId: admin._id,
-          observaciones: "Solicitud creada",
-        },
-        ...(s.estado !== "Registrada"
-          ? [
-              {
-                estadoAnterior: "Registrada",
-                estadoNuevo: s.estado,
-                usuarioId: admin._id,
-                observaciones: "Estado actualizado",
-              },
-            ]
-          : []),
-      ],
-    }));
-
-    await Solicitud.insertMany(solicitudesConHistorial);
+    await Solicitud.insertMany(solicitudesData);
     console.log(`📋 ${solicitudesData.length} solicitudes creadas`);
 
     // Actualizar contador al valor correcto
