@@ -227,3 +227,95 @@
         `;
       }
     }
+
+    function renderSolicitud(sol) {
+      // Actualizar titulo de pagina
+      document.getElementById('pageTitle').textContent = sol.codigo;
+      document.getElementById('pageSubtitle').textContent = sol.titulo;
+      document.getElementById('btnEditar').href = `editar-solicitud.html?id=${sol._id}`;
+      
+      // Info principal
+      document.getElementById('detCodigo').textContent = sol.codigo;
+      document.getElementById('detFecha').textContent = formatDate(sol.fechaCreacion);
+      document.getElementById('detTipo').textContent = sol.tipo;
+      document.getElementById('detPrioridad').innerHTML = 
+        `<span class="badge badge-${sol.prioridad.toLowerCase()}">${sol.prioridad}</span>`;
+      document.getElementById('detTitulo').textContent = sol.titulo;
+      document.getElementById('detDescripcion').textContent = sol.descripcion;
+      
+      // Estado badge
+      document.getElementById('estadoBadgeContainer').innerHTML = 
+        `<span class="badge badge-${sol.estado.toLowerCase().replace(' ', '-')}">${sol.estado}</span>`;
+      
+      // Solicitante
+      document.getElementById('detSolicitanteNombre').textContent = sol.solicitante.nombre;
+      document.getElementById('detSolicitanteEmail').textContent = sol.solicitante.email;
+      
+      // Select de nuevo estado
+      const selectEstado = document.getElementById('nuevoEstado');
+      const estadosPermitidos = flujoEstados[sol.estado] || [];
+      
+      if (estadosPermitidos.length === 0) {
+        document.getElementById('cambiarEstadoCard').classList.add('hidden');
+      } else {
+        selectEstado.innerHTML = '<option value="">Seleccione un estado</option>' +
+          estadosPermitidos.map(e => `<option value="${e}">${e}</option>`).join('');
+      }
+      
+      // Historial
+      renderHistorial(sol.historial || []);
+    }
+
+    function renderHistorial(historial) {
+      const container = document.getElementById('historialTimeline');
+      
+      if (!historial || historial.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary)">Sin historial disponible.</p>';
+        return;
+      }
+      
+      // Ordenar de mas reciente a mas antiguo
+      const sorted = [...historial].reverse();
+      
+      container.innerHTML = sorted.map(item => `
+        <div class="timeline-item">
+          <div class="timeline-date">${formatDate(item.fecha)}</div>
+          <div class="timeline-content">
+            <span class="timeline-estado badge badge-${item.estado.toLowerCase().replace(' ', '-')}">${item.estado}</span>
+            ${item.observacion ? `<p class="timeline-observacion">${item.observacion}</p>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Cambiar estado
+    document.getElementById('btnCambiarEstado').addEventListener('click', async () => {
+      const nuevoEstado = document.getElementById('nuevoEstado').value;
+      const observacion = document.getElementById('observacionEstado').value.trim();
+      
+      if (!nuevoEstado) {
+        showAlert('alertContainer', 'Seleccione un nuevo estado.', 'warning');
+        return;
+      }
+      
+      try {
+        const response = await API.put(`/api/solicitudes/${solicitudId}`, {
+          estado: nuevoEstado,
+          observaciones: observacion
+        });
+        
+        if (response.success) {
+          showAlert('alertContainer', 'Estado actualizado correctamente.', 'success');
+          loadSolicitud();
+          document.getElementById('observacionEstado').value = '';
+        }
+      } catch (error) {
+        showAlert('alertContainer', error.message || 'Error al actualizar el estado.', 'danger');
+      }
+    });
+
+    // Inicializar
+    loadSolicitud();
+  </script>
+</body>
+</html>
