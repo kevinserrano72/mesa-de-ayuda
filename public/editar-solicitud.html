@@ -74,15 +74,19 @@
           </div>
           <div class="card-body">
             <form id="editForm">
-              <!-- Codigo y Estado (solo lectura) -->
+              <!-- Codigo (solo lectura) y Estado editable -->
               <div class="form-row">
                 <div class="form-group">
                   <label>Codigo</label>
                   <input type="text" id="codigo" class="form-control" readonly disabled>
                 </div>
                 <div class="form-group">
-                  <label>Estado Actual</label>
-                  <input type="text" id="estadoActual" class="form-control" readonly disabled>
+                  <label for="estado">Estado <span class="required">*</span></label>
+                  <select id="estado" class="form-control" required></select>
+                  <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.35rem">
+                    Solo se muestran transiciones permitidas (mismo flujo que en el detalle).
+                  </small>
+                  <div class="form-error" id="estadoError"></div>
                 </div>
               </div>
 
@@ -181,6 +185,17 @@
                 ></textarea>
               </div>
 
+              <div class="form-group" id="observacionEstadoGroup">
+                <label for="observacionEstado">Nota del cambio de estado (opcional)</label>
+                <input 
+                  type="text" 
+                  id="observacionEstado" 
+                  class="form-control" 
+                  maxlength="500"
+                  placeholder="Ej. motivo del cambio; aparece en el historial"
+                >
+              </div>
+
               <!-- Botones -->
               <div class="btn-group" style="margin-top: 1.5rem">
                 <button type="submit" class="btn btn-primary" id="btnGuardar">
@@ -220,6 +235,35 @@
       window.location.href = 'solicitudes.html';
     }
 
+    const flujoEstados = {
+      'Registrada': ['En Proceso', 'Anulada'],
+      'En Proceso': ['Registrada', 'Resuelta', 'Anulada'],
+      'Resuelta': ['En Proceso', 'Cerrada'],
+      'Cerrada': [],
+      'Anulada': []
+    };
+
+    const ordenEstados = ['Registrada', 'En Proceso', 'Resuelta', 'Cerrada', 'Anulada'];
+
+    function llenarSelectEstado(estadoActual) {
+      const select = document.getElementById('estado');
+      const siguientes = flujoEstados[estadoActual] || [];
+      const opciones = new Set([estadoActual, ...siguientes]);
+      select.innerHTML = ordenEstados
+        .filter((e) => opciones.has(e))
+        .map((e) => `<option value="${e}">${e}</option>`)
+        .join('');
+      select.value = estadoActual;
+    }
+
+    let estadoAlCargar = '';
+
+    document.getElementById('estado').addEventListener('change', () => {
+      const sel = document.getElementById('estado');
+      const grp = document.getElementById('observacionEstadoGroup');
+      if (grp) grp.style.display = sel.value !== estadoAlCargar ? 'block' : 'none';
+    });
+
     // Cargar solicitud
     async function loadSolicitud() {
       try {
@@ -235,7 +279,10 @@
           
           // Llenar formulario
           document.getElementById('codigo').value = sol.codigo;
-          document.getElementById('estadoActual').value = sol.estado;
+          estadoAlCargar = sol.estado;
+          llenarSelectEstado(sol.estado);
+          document.getElementById('observacionEstadoGroup').style.display = 'none';
+          document.getElementById('observacionEstado').value = '';
           document.getElementById('titulo').value = sol.titulo;
           document.getElementById('descripcion').value = sol.descripcion;
           document.getElementById('tipo').value = sol.tipo;
@@ -264,6 +311,8 @@
       const solicitanteNombre = document.getElementById('solicitanteNombre').value.trim();
       const solicitanteEmail = document.getElementById('solicitanteEmail').value.trim();
       const observaciones = document.getElementById('observaciones').value.trim();
+      const estado = document.getElementById('estado').value;
+      const observacionEstado = document.getElementById('observacionEstado').value.trim();
       
       // Limpiar errores
       document.querySelectorAll('.form-error').forEach(el => el.textContent = '');
@@ -305,15 +354,19 @@
       btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
       
       try {
-        const response = await API.put(`/api/solicitudes/${solicitudId}`, {
+        const payload = {
           titulo,
           descripcion,
           tipo,
           prioridad,
           solicitanteNombre,
           solicitanteEmail,
-          observaciones
-        });
+          observaciones,
+          estado,
+        };
+        if (observacionEstado) payload.observacionEstado = observacionEstado;
+
+        const response = await API.put(`/api/solicitudes/${solicitudId}`, payload);
         
         if (response.success) {
           showAlert('alertContainer', 'Solicitud actualizada correctamente.', 'success');

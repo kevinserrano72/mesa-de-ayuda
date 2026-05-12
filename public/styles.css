@@ -300,6 +300,71 @@ body {
   border-color: var(--danger);
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field .form-control {
+  padding-right: 2.75rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.35rem;
+  line-height: 1;
+  border-radius: var(--radius);
+}
+
+.password-toggle:hover {
+  color: var(--primary);
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.password-rules {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.password-rules li {
+  padding: 0.15rem 0;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.password-rules li::before {
+  content: "○";
+  position: absolute;
+  left: 0;
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.password-rules li.password-rule-ok {
+  color: var(--success);
+}
+
+.password-rules li.password-rule-ok::before {
+  content: "✓";
+}
+
+.password-rules li.password-rule-no {
+  color: var(--danger);
+}
+
+.password-rules li.password-rule-no::before {
+  content: "✗";
+}
+
 textarea.form-control {
   resize: vertical;
   min-height: 100px;

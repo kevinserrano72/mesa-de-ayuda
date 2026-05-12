@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Mesa de Ayuda Lite</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- ============================================
+         SIDEBAR
+         ============================================ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h1>
+          <span><i class="fas fa-headset"></i></span>
+          Mesa de Ayuda
+        </h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <a href="dashboard.html" class="nav-item active">
+          <i class="fas fa-chart-pie"></i>
+          Dashboard
+        </a>
+        <a href="solicitudes.html" class="nav-item">
+          <i class="fas fa-ticket-alt"></i>
+          Solicitudes
+        </a>
+        <a href="nueva-solicitud.html" class="nav-item">
+          <i class="fas fa-plus-circle"></i>
+          Nueva Solicitud
+        </a>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar" id="userAvatar">A</div>
+          <div class="user-details">
+            <div class="user-name" id="userName">Administrador</div>
+            <div class="user-role" id="userRole">Admin</div>
+          </div>
+        </div>
+        <button class="btn-logout" onclick="Auth.logout()">
+          <i class="fas fa-sign-out-alt"></i>
+          Cerrar Sesion
+        </button>
+      </div>
+    </aside>
+
+    <!-- ============================================
+         MAIN CONTENT - RF07 Dashboard
+         ============================================ -->
+    <main class="main-content">
+      <div class="page-header">
+        <h2>Panel de Resumen</h2>
+        <p>Vista general de las solicitudes de soporte</p>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Total Solicitudes</h4>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon yellow">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Registradas</h4>
+            <div class="stat-value" id="statRegistrada">0</div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon cyan">
+            <i class="fas fa-spinner"></i>
+          </div>
+          <div class="stat-info">
+            <h4>En Proceso</h4>
+            <div class="stat-value" id="statEnProceso">0</div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Resueltas</h4>
+            <div class="stat-value" id="statResuelta">0</div>
+          </div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-icon red">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-info">
+            <h4>Prioridad Alta/Critica</h4>
+            <div class="stat-value" id="statPrioridadAlta">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Requests -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="fas fa-history"></i> Solicitudes Recientes</h3>
+          <a href="solicitudes.html" class="btn btn-sm btn-outline">Ver todas</a>
+        </div>
+        <div class="card-body">
+          <div class="table-container">
+            <table class="table" id="recentTable">
+              <thead>
+                <tr>
+                  <th>Codigo</th>
+                  <th>Titulo</th>
+                  <th>Solicitante</th>
+                  <th>Prioridad</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody id="recentTableBody">
+                <tr>
+                  <td colspan="6" class="text-center">
+                    <div class="loading">
+                      <div class="spinner"></div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Verificar autenticacion
+    Auth.requireAuth();
+
+    // Cargar datos del usuario
+    const user = Auth.getUser();
+    if (user) {
+      document.getElementById('userName').textContent = user.nombre;
+      document.getElementById('userRole').textContent = user.rol;
+      document.getElementById('userAvatar').textContent = user.nombre.charAt(0).toUpperCase();
+    }
+
+    // Cargar estadisticas
+    async function loadDashboard() {
+      try {
+        const response = await API.get('/api/stats');
+        
+        if (response.success) {
+          const stats = response.data;
+          
+          // Actualizar contadores
+          document.getElementById('statTotal').textContent = stats.total;
+          document.getElementById('statRegistrada').textContent = stats.porEstado.registrada;
+          document.getElementById('statEnProceso').textContent = stats.porEstado.enProceso;
+          document.getElementById('statResuelta').textContent = stats.porEstado.resuelta;
+          document.getElementById('statPrioridadAlta').textContent = 
+            stats.porPrioridad.critica + stats.porPrioridad.alta;
+          
+          // Cargar tabla de recientes
+          renderRecentTable(stats.recientes);
+        }
+      } catch (error) {
+        console.error('Error cargando dashboard:', error);
+      }
+    }
+
+    function renderRecentTable(solicitudes) {
+      const tbody = document.getElementById('recentTableBody');
+      
+      if (!solicitudes || solicitudes.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h4>No hay solicitudes</h4>
+                <p>Aun no se han registrado solicitudes en el sistema.</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = solicitudes.map(sol => `
+        <tr onclick="window.location.href='detalle-solicitud.html?id=${sol._id}'" style="cursor:pointer">
+          <td><strong>${sol.codigo}</strong></td>
+          <td>${sol.titulo}</td>
+          <td>${sol.solicitante.nombre}</td>
+          <td><span class="badge badge-${sol.prioridad.toLowerCase()}">${sol.prioridad}</span></td>
+          <td><span class="badge badge-${sol.estado.toLowerCase().replace(' ', '-')}">${sol.estado}</span></td>
+          <td>${formatDate(sol.fechaCreacion)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Inicializar
+    loadDashboard();
+  </script>
+</body>
+</html>
