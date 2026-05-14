@@ -95,6 +95,4 @@ Estados de una solicitud: Registrada, En Proceso, Resuelta, Cerrada, Anulada. Al
 
 Si en el repo hay archivos como `02_DESARROLLO_INTEGRACION.md`, sirven como documentación extra del curso o la entrega.
 
-## Dudas o errores
 
-Abra un issue en: https://github.com/kevinserrano72/mesa-de-ayuda/issues
